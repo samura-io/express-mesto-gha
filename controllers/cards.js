@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 const cardModel = require('../models/card');
 
-const VALIDATION_ERROR_CODE = 400;
-const CAST_ERROR_CODE = 404;
-const OTHER_EEROR_CODE = 500;
+const BAD_REQUEST = 400;
+const NOT_FOUND = 404;
+const INTERNAL_SERVER_ERROR = 500;
 
 module.exports.getCards = (req, res) => {
   cardModel.find({})
     .then((data) => res.send(data))
-    .catch(() => res.status(OTHER_EEROR_CODE).send({ message: 'Произошла ошибка' }));
+    .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' }));
 };
 
 module.exports.createCard = (req, res) => {
@@ -17,9 +17,9 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(VALIDATION_ERROR_CODE).send({ message: 'Переданы некорректные данные при создании карточки' });
+        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки' });
       } else {
-        res.status(OTHER_EEROR_CODE).send({ message: 'Произошла ошибка' });
+        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
 };
@@ -29,12 +29,12 @@ module.exports.deleteCard = (req, res) => {
       if (data) {
         res.send({ message: 'Карточка удалена' });
       } else {
-        res.status(CAST_ERROR_CODE).send({ message: `Карточка с указанном id: ${req.params.cardId}, не найдена` });
+        res.status(NOT_FOUND).send({ message: `Карточка с указанном id: ${req.params.cardId}, не найдена` });
       }
     })
-    .catch(() => {
-      if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-        res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный id карточки' });
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(BAD_REQUEST).send({ message: 'Некорректный id карточки' });
       }
     });
 };
@@ -49,14 +49,14 @@ module.exports.likeCard = (req, res) => {
       if (card) {
         res.send({ data: card });
       } else {
-        res.status(CAST_ERROR_CODE).send({ message: `Передан несуществующий id: ${req.params.cardId} карточки` });
+        res.status(NOT_FOUND).send({ message: `Передан несуществующий id: ${req.params.cardId} карточки` });
       }
     })
-    .catch(() => {
-      if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-        res.status(VALIDATION_ERROR_CODE).send({ message: 'Передан некорректный id карточки' });
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(BAD_REQUEST).send({ message: 'Передан некорректный id карточки' });
       } else {
-        res.status(OTHER_EEROR_CODE).send({ message: 'Произошла ошибка' });
+        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
 };
@@ -67,14 +67,14 @@ module.exports.unlikeCard = (req, res) => {
       if (card) {
         res.send({ data: card });
       } else {
-        res.status(CAST_ERROR_CODE).send({ message: `Передан несуществующий id: ${req.params.cardId} карточки` });
+        res.status(NOT_FOUND).send({ message: `Передан несуществующий id: ${req.params.cardId} карточки` });
       }
     })
-    .catch(() => {
-      if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-        res.status(VALIDATION_ERROR_CODE).send({ message: 'Передан некорректный id карточки' });
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(BAD_REQUEST).send({ message: 'Передан некорректный id карточки' });
       } else {
-        res.status(OTHER_EEROR_CODE).send({ message: 'Произошла ошибка' });
+        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
       }
     });
 };
