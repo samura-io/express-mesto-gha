@@ -32,7 +32,7 @@ module.exports.deleteCard = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Некорректный id карточки' });
       }
     });
