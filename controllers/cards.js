@@ -25,8 +25,18 @@ module.exports.createCard = (req, res) => {
 };
 module.exports.deleteCard = (req, res) => {
   cardModel.findByIdAndRemove(req.params.cardId)
-    .then(() => res.send({ message: 'Карточка удалена' }))
-    .catch(() => res.status(CAST_ERROR_CODE).send({ message: `Карточка с указанном id: ${req.params.cardId}, не найдена` }));
+    .then((data) => {
+      if (data) {
+        res.send({ message: 'Карточка удалена' });
+      } else {
+        res.status(CAST_ERROR_CODE).send({ message: `Карточка с указанном id: ${req.params.cardId}, не найдена` });
+      }
+    })
+    .catch(() => {
+      if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+        res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный id карточки' });
+      }
+    });
 };
 
 module.exports.likeCard = (req, res) => {
