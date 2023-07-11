@@ -8,7 +8,7 @@ const app = express();
 
 app.use(express.json());
 
-router.use('/', (req, res, next) => {
+app.use('/', (req, res, next) => {
   req.user = {
     _id: '64a96ed5c0c3837bdf7d4692',
   };
