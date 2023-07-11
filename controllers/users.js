@@ -16,6 +16,8 @@ module.exports.getUserById = (req, res) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(CAST_ERROR_CODE).send({ message: `Пользователь по указанному id: ${req.params.id}, не найден` });
+      } else if (err.name === 'ValidationError') {
+        res.status(VALIDATION_ERROR_CODE).send({ message: 'Передан некорректный id' });
       } else {
         res.status(OTHER_EEROR_CODE).send({ message: 'Произошла ошибка' });
       }
@@ -36,7 +38,7 @@ module.exports.createUser = (req, res) => {
 
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
-  userModel.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+  userModel.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
       if (err.name === 'ValidationError') {
