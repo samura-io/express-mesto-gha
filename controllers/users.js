@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const userModel = require('../models/user');
 
 const VALIDATION_ERROR_CODE = 400;
@@ -12,11 +13,15 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUserById = (req, res) => {
   userModel.findById(req.params.id)
-    .then(((data) => res.send(data)))
-    .catch((err) => {
-      if (err.name === 'CastError') {
+    .then(((user) => {
+      if (user) {
+        res.send({ data: user });
+      } else {
         res.status(CAST_ERROR_CODE).send({ message: `Пользователь по указанному id: ${req.params.id}, не найден` });
-      } else if (err.name === 'ValidationError') {
+      }
+    }))
+    .catch(() => {
+      if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         res.status(VALIDATION_ERROR_CODE).send({ message: 'Передан некорректный id' });
       } else {
         res.status(OTHER_EEROR_CODE).send({ message: 'Произошла ошибка' });
