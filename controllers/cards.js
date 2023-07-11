@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const cardModel = require('../models/card');
 
 const BAD_REQUEST = 400;
@@ -53,7 +52,7 @@ module.exports.likeCard = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Передан некорректный id карточки' });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
@@ -71,7 +70,7 @@ module.exports.unlikeCard = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Передан некорректный id карточки' });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });

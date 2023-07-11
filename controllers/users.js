@@ -33,7 +33,7 @@ module.exports.createUser = (req, res) => {
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(NOT_FOUND).send({ message: 'Переданы некорректные данные при создании пользователя' });
+        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
       }
@@ -47,8 +47,6 @@ module.exports.updateUser = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
-      } else if (err.name === 'CastError') {
-        res.status(NOT_FOUND).send({ message: `Пользователь по указанному id: ${req.user._id}, не найден` });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
       }
@@ -57,13 +55,11 @@ module.exports.updateUser = (req, res) => {
 
 module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватвра' });
-      } else if (err.name === 'CastError') {
-        res.status(NOT_FOUND).send({ message: `Пользователь по указанному id: ${req.user._id}, не найден` });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
       }
