@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const cardModel = require('../models/card');
 
 const VALIDATION_ERROR_CODE = 400;
@@ -34,12 +35,16 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(VALIDATION_ERROR_CODE).send({ message: 'Переданы некорректные данные для постановки/снятии лайка' });
-      } else if (err.name === 'CastError') {
+    .then((card) => {
+      if (card) {
+        res.send({ data: card });
+      } else {
         res.status(CAST_ERROR_CODE).send({ message: `Передан несуществующий id: ${req.params.cardId} карточки` });
+      }
+    })
+    .catch(() => {
+      if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+        res.status(VALIDATION_ERROR_CODE).send({ message: 'Передан некорректный id карточки' });
       } else {
         res.status(OTHER_EEROR_CODE).send({ message: 'Произошла ошибка' });
       }
@@ -48,12 +53,16 @@ module.exports.likeCard = (req, res) => {
 
 module.exports.unlikeCard = (req, res) => {
   cardModel.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(VALIDATION_ERROR_CODE).send({ message: 'Переданы некорректные данные для постановки/снятии лайка' });
-      } else if (err.name === 'CastError') {
+    .then((card) => {
+      if (card) {
+        res.send({ data: card });
+      } else {
         res.status(CAST_ERROR_CODE).send({ message: `Передан несуществующий id: ${req.params.cardId} карточки` });
+      }
+    })
+    .catch(() => {
+      if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+        res.status(VALIDATION_ERROR_CODE).send({ message: 'Передан некорректный id карточки' });
       } else {
         res.status(OTHER_EEROR_CODE).send({ message: 'Произошла ошибка' });
       }
