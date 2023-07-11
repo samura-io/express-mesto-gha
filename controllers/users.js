@@ -1,3 +1,5 @@
+const validationError = require('mongoose').Error.ValidationError;
+const castError = require('mongoose').Error.CastError;
 const userModel = require('../models/user');
 
 const BAD_REQUEST = 400;
@@ -20,7 +22,7 @@ module.exports.getUserById = (req, res) => {
       }
     }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err instanceof castError) {
         res.status(BAD_REQUEST).send({ message: 'Передан некорректный id' });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
@@ -32,7 +34,7 @@ module.exports.createUser = (req, res) => {
   userModel.create({ name, about, avatar })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof validationError) {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
@@ -45,7 +47,7 @@ module.exports.updateUser = (req, res) => {
   userModel.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof validationError) {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
@@ -58,7 +60,7 @@ module.exports.updateAvatar = (req, res) => {
   userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err instanceof validationError) {
         res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватвра' });
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
