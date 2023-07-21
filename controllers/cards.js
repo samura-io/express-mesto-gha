@@ -1,46 +1,51 @@
 const validationError = require('mongoose').Error.ValidationError;
 const castError = require('mongoose').Error.CastError;
 const cardModel = require('../models/card');
+const BadRequest = require('../errors/BadRequest');
+const NotFound = require('../errors/NotFound');
+const Unauthorized = require('../errors/Unauthorized');
 
-const BAD_REQUEST = 400;
-const NOT_FOUND = 404;
-const INTERNAL_SERVER_ERROR = 500;
-
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   cardModel.find({})
     .then((data) => res.send(data))
-    .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' }));
+    .catch((err) => next(err));
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
-  cardModel.create({ name, link, owner: req.user._id })
+  cardModel.create({ name, link, owner: req.user })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err instanceof validationError) {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки' });
+        next(new BadRequest('Переданы некорректные данные при создании карточки'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };
-module.exports.deleteCard = (req, res) => {
-  cardModel.findByIdAndRemove(req.params.cardId)
-    .then((data) => {
-      if (data) {
-        res.send({ message: 'Карточка удалена' });
-      } else {
-        res.status(NOT_FOUND).send({ message: `Карточка с указанном id: ${req.params.cardId}, не найдена` });
+module.exports.deleteCard = (req, res, next) => {
+  cardModel.findById(req.params.cardId)
+    .then((card) => {
+      if (!(card.owner.toString() === req.user._id)) {
+        next(new Unauthorized('Вы не можете удалять чужие карточки'));
       }
-    })
-    .catch((err) => {
-      if (err instanceof castError) {
-        res.status(BAD_REQUEST).send({ message: 'Некорректный id карточки' });
-      }
+      cardModel.findByIdAndRemove(req.params.cardId)
+        .then((data) => {
+          if (data) {
+            res.send({ message: 'Карточка удалена' });
+          } else {
+            next(new NotFound(`Карточка с указанном id: ${req.params.cardId}, не найдена`));
+          }
+        })
+        .catch((err) => {
+          if (err instanceof castError) {
+            next(new BadRequest('Некорректный id карточки'));
+          }
+        });
     });
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   cardModel.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -50,32 +55,32 @@ module.exports.likeCard = (req, res) => {
       if (card) {
         res.send({ data: card });
       } else {
-        res.status(NOT_FOUND).send({ message: `Передан несуществующий id: ${req.params.cardId} карточки` });
+        next(new NotFound(`Передан несуществующий id: ${req.params.cardId} карточки`));
       }
     })
     .catch((err) => {
       if (err instanceof castError) {
-        res.status(BAD_REQUEST).send({ message: 'Передан некорректный id карточки' });
+        next(new BadRequest('Передан некорректный id карточки'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.unlikeCard = (req, res) => {
+module.exports.unlikeCard = (req, res, next) => {
   cardModel.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
     .then((card) => {
       if (card) {
         res.send({ data: card });
       } else {
-        res.status(NOT_FOUND).send({ message: `Передан несуществующий id: ${req.params.cardId} карточки` });
+        next(new NotFound(`Передан несуществующий id: ${req.params.cardId} карточки`));
       }
     })
     .catch((err) => {
       if (err instanceof castError) {
-        res.status(BAD_REQUEST).send({ message: 'Передан некорректный id карточки' });
+        next(new BadRequest('Передан некорректный id карточки'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };

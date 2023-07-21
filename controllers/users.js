@@ -1,69 +1,115 @@
 const validationError = require('mongoose').Error.ValidationError;
 const castError = require('mongoose').Error.CastError;
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const BadRequest = require('../errors/BadRequest');
+const NotFound = require('../errors/NotFound');
+const Unauthorized = require('../errors/Unauthorized');
+const Conflict = require('../errors/Conflict');
 const userModel = require('../models/user');
 
-const BAD_REQUEST = 400;
-const NOT_FOUND = 404;
-const INTERNAL_SERVER_ERROR = 500;
-
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   userModel.find({})
     .then(((data) => res.send(data)))
-    .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' }));
+    .catch((err) => next(err));
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   userModel.findById(req.params.id)
     .then(((user) => {
       if (user) {
         res.send({ data: user });
       } else {
-        res.status(NOT_FOUND).send({ message: `Пользователь по указанному id: ${req.params.id}, не найден` });
+        next(new NotFound(`Пользователь по указанному id: ${req.params.id}, не найден`));
       }
     }))
     .catch((err) => {
       if (err instanceof castError) {
-        res.status(BAD_REQUEST).send({ message: 'Передан некорректный id' });
+        next(new BadRequest('Передан некорректный id'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  userModel.create({ name, about, avatar })
-    .then(((user) => res.send({ data: user })))
-    .catch((err) => {
-      if (err instanceof validationError) {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
-      } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
-      }
+module.exports.createUser = (req, res, next) => {
+  const {
+    name,
+    about,
+    avatar,
+    email,
+  } = req.body;
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => {
+      userModel.create({
+        name,
+        about,
+        avatar,
+        email,
+        password: hash,
+      })
+        .then(((user) => res.send({ data: user })))
+        .catch((err) => {
+          if (err.code === 11000) {
+            next(new Conflict('Пользователь с данным Email`ом существует'));
+          }
+          if (err instanceof validationError) {
+            next(new BadRequest('Переданы некорректные данные при создании пользователя'));
+          } else {
+            next(err);
+          }
+        });
     });
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
-  userModel.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  userModel.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
       if (err instanceof validationError) {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        next(new BadRequest('Переданы некорректные данные при обновлении профиля'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-  userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+  userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
       if (err instanceof validationError) {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватвра' });
+        next(new BadRequest('Переданы некорректные данные при обновлении аватвра'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  userModel.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        'cde3828a2fde0b2bd42cb6108bcc8a869c8ba947ace460eccabffc67a229604d',
+        { expiresIn: '7d' },
+      );
+      return res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+        sameSite: true,
+      })
+        .end();
+    })
+    .catch(() => {
+      next(new Unauthorized('Неправильный email или пароль'));
+    });
+};
+
+module.exports.getUserInfo = (req, res, next) => {
+  userModel.findById(req.user._id)
+    .then(((data) => res.send(data)))
+    .catch((err) => next(err));
 };
