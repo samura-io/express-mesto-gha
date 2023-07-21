@@ -4,9 +4,19 @@ const { errors } = require('celebrate');
 const usersRouter = require('./users');
 const cardsRouter = require('./cards');
 const NotFound = require('../errors/NotFound');
+const {
+  createUser,
+  login,
+} = require('../controllers/users');
+
+const {
+  validationEmailAndPassword,
+} = require('../middlewares/validation');
 
 const INTERNAL_SERVER_ERROR = 500;
 
+router.post('/signin', validationEmailAndPassword, login);
+router.post('/signup', validationEmailAndPassword, createUser);
 router.use(cookieParser());
 router.use('/users', usersRouter);
 router.use('/cards', cardsRouter);
