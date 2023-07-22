@@ -26,6 +26,9 @@ module.exports.createCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   cardModel.findById(req.params.cardId)
     .then((card) => {
+      if (card === null) {
+        return next(new NotFound(`Карточка с указанном id: ${req.params.cardId}, не найдена`));
+      }
       if (!(card.owner.toString() === req.user._id)) {
         next(new Unauthorized('Вы не можете удалять чужие карточки'));
       }
@@ -33,8 +36,6 @@ module.exports.deleteCard = (req, res, next) => {
         .then((data) => {
           if (data) {
             res.send({ message: 'Карточка удалена' });
-          } else {
-            next(new NotFound(`Карточка с указанном id: ${req.params.cardId}, не найдена`));
           }
         })
         .catch((err) => {
