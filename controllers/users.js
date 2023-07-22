@@ -100,12 +100,13 @@ module.exports.login = (req, res, next) => {
         'cde3828a2fde0b2bd42cb6108bcc8a869c8ba947ace460eccabffc67a229604d',
         { expiresIn: '7d' },
       );
-      res.send({ data: user });
-      return res.cookie('jwt', token, {
+      res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
         sameSite: true,
-      });
+      })
+      res.send({ data: user })
+        .end();
     })
     .catch(() => {
       next(new Unauthorized('Неправильный email или пароль'));
