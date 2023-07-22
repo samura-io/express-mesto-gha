@@ -1,9 +1,0 @@
-// Добавил этот файл, чтобы не ругались тесты на GH. Все настройки находятся в файле .eslintrc.js
-
-{
-  "extends": "airbnb-base",
-  "rules": {
-    "no-underscore-dangle": ["error", { "allow": ["_id"] }],
-    "no-console": "off"
-  }
-}
