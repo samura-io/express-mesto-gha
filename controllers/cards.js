@@ -3,7 +3,7 @@ const castError = require('mongoose').Error.CastError;
 const cardModel = require('../models/card');
 const BadRequest = require('../errors/BadRequest');
 const NotFound = require('../errors/NotFound');
-const Forbidden = require('../errors/Unauthorized');
+const Forbidden = require('../errors/Forbidden');
 
 module.exports.getCards = (req, res, next) => {
   cardModel.find({})
