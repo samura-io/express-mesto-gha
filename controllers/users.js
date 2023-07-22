@@ -47,7 +47,11 @@ module.exports.createUser = (req, res, next) => {
         email,
         password: hash,
       })
-        .then(((user) => res.send({ data: user })))
+        .then(((user) => {
+          const userWithoutPassword = user.toObject();
+          delete userWithoutPassword.password;
+          res.send({ data: userWithoutPassword });
+        }))
         .catch((err) => {
           if (err.code === 11000) {
             next(new Conflict('Пользователь с данным Email`ом существует'));
