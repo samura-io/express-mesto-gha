@@ -13,8 +13,6 @@ const {
   validationEmailAndPassword,
 } = require('../middlewares/validation');
 
-const INTERNAL_SERVER_ERROR = 500;
-
 router.post('/signin', validationEmailAndPassword, login);
 router.post('/signup', validationEmailAndPassword, createUser);
 router.post('/signout', logout);
@@ -23,15 +21,6 @@ router.use('/users', usersRouter);
 router.use('/cards', cardsRouter);
 router.use('*', (req, res, next) => {
   next(new NotFound('Неверный путь'));
-});
-
-router.use((err, req, res, next) => {
-  if (err.statusCode) {
-    res.status(err.statusCode).send({ message: err.message });
-  } else {
-    res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
-  }
-  next();
 });
 
 module.exports = router;
