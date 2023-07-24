@@ -4,7 +4,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const BadRequest = require('../errors/BadRequest');
 const NotFound = require('../errors/NotFound');
-const Unauthorized = require('../errors/Unauthorized');
 const Conflict = require('../errors/Conflict');
 const userModel = require('../models/user');
 
@@ -62,12 +61,15 @@ module.exports.createUser = (req, res, next) => {
             next(err);
           }
         });
+    })
+    .catch((err) => {
+      next(err);
     });
 };
 
 module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
-  userModel.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+  userModel.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
       if (err instanceof validationError) {
@@ -80,7 +82,7 @@ module.exports.updateUser = (req, res, next) => {
 
 module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-  userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then(((user) => res.send({ data: user })))
     .catch((err) => {
       if (err instanceof validationError) {
@@ -105,11 +107,11 @@ module.exports.login = (req, res, next) => {
         httpOnly: true,
         sameSite: true,
       });
-      res.send({ data: user })
+      res.send({ jwt: token })
         .end();
     })
     .catch(() => {
-      next(new Unauthorized('Неправильный email или пароль'));
+      next(next);
     });
 };
 
@@ -117,4 +119,8 @@ module.exports.getUserInfo = (req, res, next) => {
   userModel.findById(req.user._id)
     .then(((data) => res.send(data)))
     .catch((err) => next(err));
+};
+
+module.exports.logout = (req, res) => {
+  res.clearCookie('jwt').send({ message: 'Выход' });
 };
