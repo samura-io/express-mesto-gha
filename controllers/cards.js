@@ -24,18 +24,19 @@ module.exports.createCard = (req, res, next) => {
     });
 };
 module.exports.deleteCard = (req, res, next) => {
-  cardModel.findById(req.params.cardId)
+  const { cardId } = req.params;
+  cardModel.findById(cardId)
     .then((card) => {
       if (card === null) {
-        return next(new NotFound(`Карточка с указанном id: ${req.params.cardId}, не найдена`));
+        return next(new NotFound(`Карточка с указанном id: ${cardId}, не найдена`));
       }
       if (!(card.owner.toString() === req.user._id)) {
         return next(new Forbidden('Вы не можете удалять чужие карточки'));
       }
-      cardModel.findByIdAndRemove(req.params.cardId)
+      cardModel.findByIdAndRemove(cardId)
         .then((data) => {
           if (data) {
-            res.send({ message: 'Карточка удалена' });
+            return res.send({ message: 'Карточка удалена' });
           }
         })
         .catch((err) => {
@@ -44,7 +45,7 @@ module.exports.deleteCard = (req, res, next) => {
           } else { next(err); }
         });
     })
-    .cath((err) => {
+    .catch((err) => {
       next(err);
     });
 };
