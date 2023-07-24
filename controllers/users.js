@@ -110,8 +110,8 @@ module.exports.login = (req, res, next) => {
       res.send({ jwt: token })
         .end();
     })
-    .catch(() => {
-      next(next);
+    .catch((err) => {
+      next(err);
     });
 };
 
