@@ -1,8 +1,7 @@
 [![Tests 13 sprint](https://github.com/samura-io/express-mesto-gha/actions/workflows/tests-13-sprint.yml/badge.svg)](https://github.com/samura-io/express-mesto-gha/actions/workflows/tests-13-sprint.yml) [![Tests 14 sprint](https://github.com/samura-io/express-mesto-gha/actions/workflows/tests-14-sprint.yml/badge.svg)](https://github.com/samura-io/express-mesto-gha/actions/workflows/tests-14-sprint.yml)
 
 # Mesto Backend
-
-Это репозиторий для проектной работы курса Yandex-Practicum - Mesto Backend. 
+ 
 Этот проект представляет собой серверную часть приложения Mesto, которое позволяет 
 пользователям делиться фотографиями мест, которые они посетили.
 
